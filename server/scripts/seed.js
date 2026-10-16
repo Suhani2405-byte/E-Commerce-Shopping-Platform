@@ -8,9 +8,10 @@ dotenv.config();
 const seedDatabase = async () => {
   const uri = process.env.MONGODB_URI;
 
-  if (!uri) {
-    console.error('\n❌ [Seed Failed] MONGODB_URI is not defined in server/.env');
-    console.log('👉 Please set MONGODB_URI in server/.env (e.g., mongodb+srv://<user>:<password>@cluster0.mongodb.net/ecommerce)\n');
+  if (!uri || uri.includes('<db_username>')) {
+    console.error('\n❌ [Seed Failed] MONGODB_URI has "<db_username>".');
+    console.log('👉 Please replace <db_username> in server/.env with your MongoDB Atlas database username.');
+    console.log('💡 In Atlas: Go to "Database Access" in the left sidebar to see your username (or click "Add New Database User").\n');
     process.exit(1);
   }
 

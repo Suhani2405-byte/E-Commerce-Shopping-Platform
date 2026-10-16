@@ -5,10 +5,10 @@ let isConnected = false;
 export const connectDB = async () => {
   const uri = process.env.MONGODB_URI;
 
-  if (!uri) {
-    console.warn('\n⚠️ [Database Notice] No MONGODB_URI found in environment variables.');
-    console.warn('💡 The server will run in "Smart Memory Mode" using the built-in 50 products.');
-    console.warn('👉 To connect MongoDB Atlas, create a free database at mongodb.com/cloud/atlas and add MONGODB_URI to server/.env!\n');
+  if (!uri || uri.includes('<db_username>')) {
+    console.warn('\n⚠️ [Database Notice] MONGODB_URI requires your MongoDB Atlas database username.');
+    console.warn('👉 In MongoDB Atlas: Left Menu -> Database Access -> Check your "Username" (or click "Add New Database User").');
+    console.warn('💡 The server is running smoothly in Smart Memory Mode with all 50 products active!\n');
     return false;
   }
 

@@ -154,19 +154,13 @@ Follow these simple steps to connect your free cloud MongoDB database:
 
 ### 3. Copy Your Connection String
 1. Under **Database** $\rightarrow$ Click **"Connect"** $\rightarrow$ **"Drivers"** (Node.js).
-2. Copy the connection string format:
-   ```
-   mongodb+srv://<username>:<password>@cluster0.yourcluster.mongodb.net/ecommerce?retryWrites=true&w=majority
-   ```
+   
+2. Copy the connection string format
+   
 3. Replace `<username>` and `<password>` with the credentials you created.
 
 ### 4. Configure `server/.env`
-Create a `.env` file inside the `server/` folder:
-```env
-PORT=5000
-MONGODB_URI=mongodb+srv://your_username:your_password@cluster0.mongodb.net/ecommerce?retryWrites=true&w=majority
-NODE_ENV=development
-```
+Create a `.env` file inside the `server/` folder
 
 ### 5. Seed the 50 Products into MongoDB
 Run this command from the root directory:
@@ -202,8 +196,7 @@ This repository is pre-configured with `vercel.json` and a serverless API adapte
 2. Log into [vercel.com](https://vercel.com) and click **"Add New" $\rightarrow$ "Project"**.
 3. Import your GitHub repository.
 4. In the **Environment Variables** section, add:
-   - `MONGODB_URI`: `your_mongodb_atlas_connection_string`
-   - `NODE_ENV`: `production`
+   
 5. Click **"Deploy"**!  
    Vercel will automatically build the React Vite frontend and deploy the Express API to Vercel Serverless Functions.
 

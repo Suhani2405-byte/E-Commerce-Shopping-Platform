@@ -22,7 +22,7 @@ const CATEGORIES = [
     name: 'Home & Living',
     count: '10 Items',
     icon: Home,
-    image: 'https://images.unsplash.com/photo-1580481077195-c3a821a58875?w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&q=80',
     color: 'from-amber-600 to-orange-600'
   },
   {

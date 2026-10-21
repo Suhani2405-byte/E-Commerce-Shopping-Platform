@@ -4,7 +4,7 @@ export const blogs = [
     slug: "ultimate-ergonomic-workstations-guide-2026",
     title: "The Ultimate 2026 Guide to Ergonomic Workstations: Relieve Strain & Boost Focus",
     excerpt: "Discover how science-backed chair adjustments, monitor arm placement, and mechanical keyboards can eliminate neck pain and double deep-work stamina.",
-    coverImage: "https://images.unsplash.com/photo-1580481077195-c3a821a58875?w=1000&q=80",
+    coverImage: "https://images.unsplash.com/photo-1589384267710-7a170981ca78?w=1000&q=80",
     category: "Productivity",
     author: {
       name: "Marcus Vance",

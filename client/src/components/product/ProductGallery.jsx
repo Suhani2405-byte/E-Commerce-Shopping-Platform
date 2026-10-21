@@ -13,6 +13,10 @@ export const ProductGallery = ({ images = [], productName = '' }) => {
         <img
           src={currentImage}
           alt={productName}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = fallback;
+          }}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 cursor-zoom-in"
         />
       </div>
@@ -33,6 +37,10 @@ export const ProductGallery = ({ images = [], productName = '' }) => {
               <img
                 src={img}
                 alt={`${productName} thumbnail ${idx + 1}`}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = fallback;
+                }}
                 className="w-full h-full object-cover"
               />
             </button>

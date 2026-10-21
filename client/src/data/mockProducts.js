@@ -301,7 +301,7 @@ export const products = [
     isTrending: false,
     isNew: false,
     images: [
-      "https://images.unsplash.com/photo-1609592424109-dd9892f1b177?w=800&q=80"
+      "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=800&q=80"
     ],
     colors: [{ name: "Metallic Black", code: "#2d3436" }],
     sizes: ["20,000 mAh"],
@@ -830,7 +830,7 @@ export const products = [
     isTrending: true,
     isNew: false,
     images: [
-      "https://images.unsplash.com/photo-1580481077195-c3a821a58875?w=800&q=80",
+      "https://images.unsplash.com/photo-1589384267710-7a170981ca78?w=800&q=80",
       "https://images.unsplash.com/photo-1505797149-43b0069ec26b?w=800&q=80"
     ],
     colors: [
@@ -1027,7 +1027,7 @@ export const products = [
     isTrending: false,
     isNew: false,
     images: [
-      "https://images.unsplash.com/photo-1584990347449-3079b7b99c04?w=800&q=80",
+      "https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=800&q=80",
       "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800&q=80"
     ],
     colors: [{ name: "Brushed Stainless Steel", code: "#dcdde1" }],
@@ -1224,7 +1224,7 @@ export const products = [
     isNew: false,
     images: [
       "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800&q=80",
-      "https://images.unsplash.com/photo-1608248597359-543110292787?w=800&q=80"
+      "https://images.unsplash.com/photo-1617897903246-719242758050?w=800&q=80"
     ],
     colors: [{ name: "Clear Dew", code: "#f1f2f6" }],
     sizes: ["30 ml", "60 ml"],
@@ -1261,7 +1261,7 @@ export const products = [
     isTrending: false,
     isNew: true,
     images: [
-      "https://images.unsplash.com/photo-1559591937-e1032b45070f?w=800&q=80"
+      "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=800&q=80"
     ],
     colors: [
       { name: "Matte Black", code: "#2d3436" },
@@ -1338,7 +1338,7 @@ export const products = [
     isTrending: false,
     isNew: false,
     images: [
-      "https://images.unsplash.com/photo-1567928804479-7c858547432f?w=800&q=80"
+      "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80"
     ],
     colors: [{ name: "Mineral Gray", code: "#7f8c8d" }],
     sizes: ["200g / 7 oz Jar"],
@@ -1802,7 +1802,7 @@ export const products = [
     isTrending: true,
     isNew: false,
     images: [
-      "https://images.unsplash.com/photo-1532012164546-f432f2e3777a?w=800&q=80"
+      "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&q=80"
     ],
     colors: [{ name: "O'Reilly Signature White", code: "#ffffff" }],
     sizes: ["Paperback (616 pages)"],

@@ -23,13 +23,18 @@ app.use(express.json());
 // Initialize Database (Atlas or Smart Memory fallback)
 connectDB();
 
-// API Routes
+// API Routes (supports both /api/* and root rewrites)
 app.use('/api/products', productRoutes);
+app.use('/products', productRoutes);
+
 app.use('/api/orders', orderRoutes);
+app.use('/orders', orderRoutes);
+
 app.use('/api/ai', aiRoutes);
+app.use('/ai', aiRoutes);
 
 // Health & Status endpoint
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   const dbStatus = getDbStatus();
   res.json({
     status: 'healthy',

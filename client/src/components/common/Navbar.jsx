@@ -13,7 +13,9 @@ import {
   TrendingUp,
   Tag,
   ShieldCheck,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  Check
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -34,9 +36,18 @@ export const Navbar = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+  const [copiedCoupon, setCopiedCoupon] = useState('');
 
   const searchRef = useRef(null);
   const categoryMenuRef = useRef(null);
+
+  const handleCopyCoupon = (e, code = 'SAVE20') => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard?.writeText(code);
+    setCopiedCoupon(code);
+    setTimeout(() => setCopiedCoupon(''), 2200);
+  };
 
   // Close menus on route change
   useEffect(() => {
@@ -97,27 +108,79 @@ export const Navbar = () => {
     { name: 'Books', count: 6, icon: '📚' }
   ];
 
+  const tickerItems = [
+    {
+      badge: '🔥 FLASH SALE',
+      text: 'Use Code',
+      code: 'SAVE20',
+      actionText: 'for 20% Off Storewide!',
+      clickable: true
+    },
+    {
+      badge: '🚚 FREE DELIVERY',
+      text: 'Free Express Shipping on Orders Over $99',
+      clickable: false
+    },
+    {
+      badge: '✨ AI POWERED',
+      text: 'Real-time personalized recommendations active',
+      clickable: false
+    },
+    {
+      badge: '🎁 NEW USER',
+      text: 'First order? Use code',
+      code: 'WELCOME10',
+      actionText: 'for 10% instant discount',
+      clickable: true
+    },
+    {
+      badge: '🛡️ ASSURED',
+      text: '30-Day Hassle-Free Returns & 100% Secure Checkout',
+      clickable: false
+    }
+  ];
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs font-medium py-1.5 px-4 text-center">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="hidden sm:flex items-center space-x-2">
-            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Special</span>
-            <span>Free Express Shipping on Orders Over $99</span>
-          </div>
-          <div className="mx-auto sm:mx-0 flex items-center space-x-3">
-            <span>Use Code <strong className="font-extrabold underline decoration-white/40">SAVE20</strong> for 20% Off!</span>
-            <Link to="/ai-dashboard" className="hidden md:inline-flex items-center space-x-1 bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded text-[11px] transition">
-              <Sparkles className="w-3 h-3 text-amber-300" />
-              <span>AI Insights Active</span>
-            </Link>
-          </div>
-          <div className="hidden sm:flex items-center space-x-3 text-white/80">
-            <Link to="/about" className="hover:text-white">Our Story</Link>
-            <span>•</span>
-            <Link to="/contact" className="hover:text-white">Support</Link>
-          </div>
+      {/* Moving Marquee Ticker Announcement Bar (like Flipkart / Amazon) */}
+      <div className="relative bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-600 text-white py-2 overflow-hidden border-b border-white/10 select-none shadow-sm">
+        {/* Left & Right gradient edge masks for smooth fade in/out */}
+        <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-indigo-700 to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-pink-600 to-transparent z-10 pointer-events-none" />
+
+        <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
+          {[...tickerItems, ...tickerItems].map((item, idx) => (
+            <div key={idx} className="flex items-center space-x-2.5 text-xs font-medium">
+              <span className="bg-white/20 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-sm border border-white/20">
+                {item.badge}
+              </span>
+              <span className="text-white/95">
+                {item.text}
+              </span>
+              {item.code && (
+                <button
+                  type="button"
+                  onClick={(e) => handleCopyCoupon(e, item.code)}
+                  title="Click to copy coupon code"
+                  className="inline-flex items-center space-x-1.5 bg-white/25 hover:bg-white/35 active:scale-95 text-white font-extrabold px-2.5 py-0.5 rounded-md transition-all border border-white/30 cursor-pointer shadow-sm"
+                >
+                  <span className="tracking-wider">{item.code}</span>
+                  {copiedCoupon === item.code ? (
+                    <span className="inline-flex items-center gap-1 text-emerald-300 text-[10px]">
+                      <Check className="w-3 h-3" />
+                      <span>Copied!</span>
+                    </span>
+                  ) : (
+                    <Copy className="w-3 h-3 text-white/80" />
+                  )}
+                </button>
+              )}
+              {item.actionText && (
+                <span className="font-medium text-white/95">{item.actionText}</span>
+              )}
+              <span className="text-white/40 px-2 font-bold select-none">•</span>
+            </div>
+          ))}
         </div>
       </div>
 

@@ -1,34 +1,41 @@
 import mongoose from 'mongoose';
 
-let isConnected = false;
+// Cache connection promise so it's reused across requests (critical for Vercel)
+let connectionPromise = null;
 
 export const connectDB = async () => {
   const uri = process.env.MONGODB_URI;
 
   if (!uri || uri.includes('<db_username>')) {
-    console.warn('\n⚠️ [Database Notice] MONGODB_URI requires your MongoDB Atlas database username.');
-    console.warn('👉 In MongoDB Atlas: Left Menu -> Database Access -> Check your "Username" (or click "Add New Database User").');
-    console.warn('💡 The server is running smoothly in Smart Memory Mode with all 50 products active!\n');
+    console.warn('\n⚠️ [Database Notice] MONGODB_URI not configured — running in Memory Mode.');
     return false;
   }
 
-  try {
-    const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
-    });
-    isConnected = true;
-    console.log(`\n✅ [MongoDB Atlas Connected] Host: ${conn.connection.host}`);
+  // If already connected, return immediately
+  if (mongoose.connection.readyState === 1) {
     return true;
-  } catch (err) {
-    console.error(`\n❌ [MongoDB Connection Error]: ${err.message}`);
-    console.warn('💡 Operating seamlessly with in-memory store so your application remains fully functional!\n');
-    isConnected = false;
-    return false;
   }
+
+  // Reuse in-flight connection promise (prevents multiple simultaneous connects)
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 8000,
+      socketTimeoutMS: 45000,
+    }).then(conn => {
+      console.log(`\n✅ [MongoDB Atlas Connected] Host: ${conn.connection.host}`);
+      return true;
+    }).catch(err => {
+      console.error(`\n❌ [MongoDB Connection Error]: ${err.message}`);
+      connectionPromise = null; // Reset so next request retries
+      return false;
+    });
+  }
+
+  return await connectionPromise;
 };
 
 export const getDbStatus = () => ({
-  connected: isConnected && mongoose.connection.readyState === 1,
+  connected: mongoose.connection.readyState === 1,
   readyState: mongoose.connection.readyState,
-  host: isConnected ? mongoose.connection.host : 'Memory Store (Built-in 50 Items)'
+  host: mongoose.connection.readyState === 1 ? mongoose.connection.host : 'Memory Store (Built-in 50 Items)'
 });

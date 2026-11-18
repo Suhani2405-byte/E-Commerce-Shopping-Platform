@@ -1,6 +1,6 @@
 import express from 'express';
 import Order from '../models/Order.js';
-import { getDbStatus } from '../config/db.js';
+import { connectDB, getDbStatus } from '../config/db.js';
 
 const router = express.Router();
 
@@ -51,6 +51,7 @@ const memoryOrders = [
 // GET /api/orders - Get order history
 router.get('/', async (req, res) => {
   try {
+    await connectDB();
     const { connected } = getDbStatus();
     if (connected) {
       const orders = await Order.find().sort({ createdAt: -1 }).lean();
@@ -66,6 +67,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    await connectDB();
     const { connected } = getDbStatus();
 
     if (connected) {
@@ -121,15 +123,22 @@ router.post('/', async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
+    // Always attempt to connect before saving
+    await connectDB();
     const { connected } = getDbStatus();
+    console.log(`[Order] DB connected: ${connected}, orderId: ${orderId}`);
+
     if (connected) {
       try {
         const orderDoc = new Order(newOrder);
         await orderDoc.save();
+        console.log(`[Order] ✅ Saved to MongoDB: ${orderId}`);
         return res.status(201).json(orderDoc);
       } catch (dbErr) {
-        console.warn('Failed to save to Mongo, storing in memory:', dbErr.message);
+        console.error(`[Order] ❌ MongoDB save failed: ${dbErr.message}`);
       }
+    } else {
+      console.warn(`[Order] ⚠️ MongoDB not connected — storing in memory: ${orderId}`);
     }
 
     memoryOrders.unshift(newOrder);

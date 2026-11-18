@@ -21,7 +21,13 @@ app.use(cors({
 app.use(express.json());
 
 // Initialize Database (Atlas or Smart Memory fallback)
-connectDB();
+connectDB().then(connected => {
+  if (connected) {
+    console.log('? Database ready — orders will persist to MongoDB Atlas.');
+  } else {
+    console.warn('?? Running in memory mode — orders will not persist.');
+  }
+});
 
 // API Routes (supports both /api/* and root rewrites)
 app.use('/api/products', productRoutes);

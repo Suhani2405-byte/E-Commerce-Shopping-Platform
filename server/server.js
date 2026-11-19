@@ -20,12 +20,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Initialize Database (Atlas or Smart Memory fallback)
-connectDB().then(connected => {
+// Initialize Database connection
+connectDB().then((connected) => {
   if (connected) {
-    console.log('? Database ready — orders will persist to MongoDB Atlas.');
+    console.log('[Database] Ready - orders will persist to MongoDB Atlas.');
   } else {
-    console.warn('?? Running in memory mode — orders will not persist.');
+    console.warn('[Database] Running in fallback memory mode.');
   }
 });
 
@@ -82,8 +82,8 @@ app.use((err, req, res, next) => {
 // Start listening if running directly (not in Vercel serverless context)
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`\nðŸš€ [Server Ready] Running on http://localhost:${PORT}`);
-    console.log(`ðŸ“¡ [Health Check] Visit http://localhost:${PORT}/api/health\n`);
+    console.log(`\n[Server Ready] Running on http://localhost:${PORT}`);
+    console.log(`[Health Check] Visit http://localhost:${PORT}/api/health\n`);
   });
 }
 

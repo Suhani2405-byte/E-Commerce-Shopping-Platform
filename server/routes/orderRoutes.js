@@ -55,10 +55,11 @@ router.get('/', async (req, res) => {
     const { connected } = getDbStatus();
     if (connected) {
       const orders = await Order.find().sort({ createdAt: -1 }).lean();
-      return res.json(orders.length > 0 ? orders : memoryOrders);
+      return res.json(orders);
     }
     res.json(memoryOrders);
   } catch (err) {
+    console.error('Error fetching orders:', err);
     res.json(memoryOrders);
   }
 });
@@ -71,7 +72,12 @@ router.get('/:id', async (req, res) => {
     const { connected } = getDbStatus();
 
     if (connected) {
-      const order = await Order.findOne({ $or: [{ orderId: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] }).lean();
+      const order = await Order.findOne({
+        $or: [
+          { orderId: id },
+          { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }
+        ]
+      }).lean();
       if (order) return res.json(order);
     }
 
@@ -125,24 +131,33 @@ router.post('/', async (req, res) => {
 
     // Always attempt to connect before saving
     await connectDB();
-    const { connected } = getDbStatus();
-    console.log(`[Order] DB connected: ${connected}, orderId: ${orderId}`);
+    const dbStatus = getDbStatus();
+    console.log(`[Order] DB connected: ${dbStatus.connected}, orderId: ${orderId}`);
 
-    if (connected) {
+    if (dbStatus.connected) {
       try {
         const orderDoc = new Order(newOrder);
         await orderDoc.save();
-        console.log(`[Order] ✅ Saved to MongoDB: ${orderId}`);
+        console.log(`[Order] Successfully saved to MongoDB Atlas: ${orderId}`);
         return res.status(201).json(orderDoc);
       } catch (dbErr) {
-        console.error(`[Order] ❌ MongoDB save failed: ${dbErr.message}`);
+        console.error(`[Order] MongoDB save failed: ${dbErr.message}`);
+        memoryOrders.unshift(newOrder);
+        return res.status(201).json({
+          ...newOrder,
+          _storage: 'memory_fallback',
+          _dbError: dbErr.message
+        });
       }
     } else {
-      console.warn(`[Order] ⚠️ MongoDB not connected — storing in memory: ${orderId}`);
+      console.warn(`[Order] MongoDB not connected (${dbStatus.lastError || 'No URI'}) - storing in memory: ${orderId}`);
+      memoryOrders.unshift(newOrder);
+      return res.status(201).json({
+        ...newOrder,
+        _storage: 'memory_fallback',
+        _dbError: dbStatus.lastError || 'Database connection unavailable'
+      });
     }
-
-    memoryOrders.unshift(newOrder);
-    res.status(201).json(newOrder);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -47,6 +47,9 @@ app.get(['/api/health', '/health'], (req, res) => {
     timestamp: new Date().toISOString(),
     database: {
       connected: dbStatus.connected,
+      hasUri: dbStatus.hasUri,
+      uriPrefix: dbStatus.uriPrefix,
+      lastError: dbStatus.lastError,
       mode: dbStatus.connected ? 'MongoDB Atlas' : 'Smart In-Memory Store (Active)',
       host: dbStatus.host
     },

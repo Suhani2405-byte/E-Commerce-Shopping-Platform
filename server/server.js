@@ -29,6 +29,15 @@ connectDB().then((connected) => {
   }
 });
 
+// Make sure the DB connection attempt has finished before any route checks it
+// (on serverless cold starts the module-level connect may still be in flight)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch {}
+  next();
+});
+
 // API Routes (supports both /api/* and root rewrites)
 app.use('/api/products', productRoutes);
 app.use('/products', productRoutes);
@@ -48,7 +57,6 @@ app.get(['/api/health', '/health'], (req, res) => {
     database: {
       connected: dbStatus.connected,
       hasUri: dbStatus.hasUri,
-      uriPrefix: dbStatus.uriPrefix,
       lastError: dbStatus.lastError,
       mode: dbStatus.connected ? 'MongoDB Atlas' : 'Smart In-Memory Store (Active)',
       host: dbStatus.host

@@ -67,6 +67,7 @@ export const api = {
       else if (sort === 'price_desc') filtered.sort((a, b) => b.price - a.price);
       else if (sort === 'rating_desc' || sort === 'rating') filtered.sort((a, b) => b.rating - a.rating);
       else if (sort === 'popular') filtered.sort((a, b) => b.reviewCount - a.reviewCount);
+      else if (sort === 'newest') filtered.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
       else filtered.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
 
       const pageNum = parseInt(page, 10);
@@ -135,15 +136,31 @@ export const api = {
       status: 'Processing',
       createdAt: new Date().toISOString()
     };
-    const res = await fetchSafe('/orders', {
-      method: 'POST',
-      body: JSON.stringify(orderData)
-    }, localOrder);
-    return res || localOrder;
+    let res;
+    try {
+      res = await fetch(`${API_BASE}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+    } catch (err) {
+      console.warn(`[API Fallback on /orders]: ${err.message}. Using built-in local store.`);
+      return localOrder;
+    }
+
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      // Server reached but order was rejected/not saved - surface it, never fake success
+      const error = new Error(body.error || `Order failed (status ${res.status})`);
+      error.status = res.status;
+      throw error;
+    }
+    return body;
   },
 
-  async getOrders() {
-    const res = await fetchSafe('/orders', {}, []);
+  async getOrders(sessionId) {
+    if (!sessionId) return [];
+    const res = await fetchSafe(`/orders?sessionId=${encodeURIComponent(sessionId)}`, {}, []);
     return res || [];
   },
 

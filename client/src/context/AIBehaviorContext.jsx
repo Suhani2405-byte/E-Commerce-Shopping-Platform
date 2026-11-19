@@ -11,7 +11,7 @@ export const AIBehaviorProvider = ({ children }) => {
   const [sessionId] = useState(() => {
     let id = localStorage.getItem(SESSION_KEY);
     if (!id) {
-      id = `sess-${Math.random().toString(36).substring(2, 9)}`;
+      id = `sess-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}${Math.random().toString(36).substring(2)}`}`;
       localStorage.setItem(SESSION_KEY, id);
     }
     return id;

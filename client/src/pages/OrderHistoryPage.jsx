@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Clock, CheckCircle2, ChevronRight, ShoppingBag, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
+import { useAIBehavior } from '../context/AIBehaviorContext';
 
 export const OrderHistoryPage = () => {
+  const { sessionId } = useAIBehavior();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -11,7 +13,7 @@ export const OrderHistoryPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     const loadOrders = async () => {
       try {
-        const data = await api.getOrders();
+        const data = await api.getOrders(sessionId);
         setOrders(data || []);
       } catch (e) {
         console.warn('Orders fetch error', e);
@@ -20,7 +22,7 @@ export const OrderHistoryPage = () => {
       }
     };
     loadOrders();
-  }, []);
+  }, [sessionId]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">

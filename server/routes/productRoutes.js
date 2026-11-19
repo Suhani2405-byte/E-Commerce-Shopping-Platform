@@ -5,6 +5,22 @@ import { getDbStatus } from '../config/db.js';
 
 const router = express.Router();
 
+// Escape user input before building a RegExp (prevents invalid-regex errors and ReDoS)
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Accept brand as ?brand=A,B or ?brand=A&brand=B
+const parseBrands = (brand) =>
+  (Array.isArray(brand) ? brand : String(brand).split(','))
+    .map(b => b.trim())
+    .filter(Boolean);
+
+// Mongoose reserves `isNew`, so it is stored as `isNewProduct`; expose it as `isNew` to the client
+const toClient = (p) => {
+  if (!p) return p;
+  const { isNewProduct, ...rest } = p;
+  return { ...rest, isNew: rest.isNew ?? !!isNewProduct };
+};
+
 // Helper to filter in memory when MongoDB is not connected
 const filterMemoryProducts = (query) => {
   let list = [...memoryProducts];
@@ -36,8 +52,8 @@ const filterMemoryProducts = (query) => {
   }
 
   if (brand && brand !== 'All') {
-    const brands = Array.isArray(brand) ? brand : [brand];
-    list = list.filter(p => brands.map(b => b.toLowerCase()).includes(p.brand.toLowerCase()));
+    const brands = parseBrands(brand).map(b => b.toLowerCase());
+    if (brands.length) list = list.filter(p => brands.includes(p.brand.toLowerCase()));
   }
 
   if (minPrice) {
@@ -120,21 +136,22 @@ router.get('/', async (req, res) => {
     const mongoQuery = {};
 
     if (q) {
+      const term = new RegExp(escapeRegex(q), 'i');
       mongoQuery.$or = [
-        { name: { $regex: q, $options: 'i' } },
-        { brand: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } },
-        { tags: { $in: [new RegExp(q, 'i')] } }
+        { name: term },
+        { brand: term },
+        { description: term },
+        { tags: term }
       ];
     }
 
     if (category && category !== 'All') {
-      mongoQuery.category = { $regex: new RegExp(`^${category}$`, 'i') };
+      mongoQuery.category = new RegExp(`^${escapeRegex(category)}$`, 'i');
     }
 
     if (brand && brand !== 'All') {
-      const brands = Array.isArray(brand) ? brand : [brand];
-      mongoQuery.brand = { $in: brands.map(b => new RegExp(`^${b}$`, 'i')) };
+      const brands = parseBrands(brand);
+      if (brands.length) mongoQuery.brand = { $in: brands.map(b => new RegExp(`^${escapeRegex(b)}$`, 'i')) };
     }
 
     if (minPrice || maxPrice) {
@@ -156,7 +173,7 @@ router.get('/', async (req, res) => {
     else if (sort === 'price_desc') sortOption = { price: -1 };
     else if (sort === 'rating_desc' || sort === 'rating') sortOption = { rating: -1 };
     else if (sort === 'popular') sortOption = { reviewCount: -1 };
-    else if (sort === 'newest') sortOption = { createdAt: -1 };
+    else if (sort === 'newest') sortOption = { isNewProduct: -1, createdAt: -1 };
 
     const pageNum = parseInt(page, 10);
     const pageSize = parseInt(limit, 10);
@@ -168,7 +185,7 @@ router.get('/', async (req, res) => {
     ]);
 
     res.json({
-      products,
+      products: products.map(toClient),
       total,
       page: pageNum,
       totalPages: Math.ceil(total / pageSize) || 1,
@@ -231,7 +248,7 @@ router.get('/featured', async (req, res) => {
     const { connected } = getDbStatus();
     if (connected) {
       const items = await Product.find({ isFeatured: true }).limit(8).lean();
-      return res.json(items);
+      return res.json(items.map(toClient));
     }
     const items = memoryProducts.filter(p => p.isFeatured).slice(0, 8);
     res.json(items);
@@ -246,7 +263,7 @@ router.get('/trending', async (req, res) => {
     const { connected } = getDbStatus();
     if (connected) {
       const items = await Product.find({ isTrending: true }).limit(8).lean();
-      return res.json(items);
+      return res.json(items.map(toClient));
     }
     const items = memoryProducts.filter(p => p.isTrending).slice(0, 8);
     res.json(items);
@@ -263,7 +280,7 @@ router.get('/:id', async (req, res) => {
 
     if (connected) {
       const product = await Product.findOne({ $or: [{ id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] }).lean();
-      if (product) return res.json(product);
+      if (product) return res.json(toClient(product));
     }
 
     const memoryItem = memoryProducts.find(p => p.id === id || p._id === id);
@@ -284,16 +301,23 @@ router.post('/:id/reviews', async (req, res) => {
     const { id } = req.params;
     const { user, rating, comment } = req.body;
 
-    if (!user || !rating || !comment) {
+    const cleanUser = String(user || '').trim().slice(0, 60);
+    const cleanComment = String(comment || '').trim().slice(0, 2000);
+    const numRating = Number(rating);
+
+    if (!cleanUser || !cleanComment || !Number.isFinite(numRating)) {
       return res.status(400).json({ error: 'User name, rating, and comment are required' });
+    }
+    if (numRating < 1 || numRating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
     }
 
     const newReview = {
       id: `r-${Date.now()}`,
-      user,
-      rating: Number(rating),
+      user: cleanUser,
+      rating: numRating,
       date: new Date().toISOString().split('T')[0],
-      comment
+      comment: cleanComment
     };
 
     const { connected } = getDbStatus();
@@ -305,7 +329,7 @@ router.post('/:id/reviews', async (req, res) => {
         const totalRating = product.reviews.reduce((acc, r) => acc + r.rating, 0);
         product.rating = Number((totalRating / product.reviews.length).toFixed(1));
         await product.save();
-        return res.status(201).json(product);
+        return res.status(201).json(toClient(product.toObject()));
       }
     }
 

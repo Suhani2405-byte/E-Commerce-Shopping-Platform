@@ -49,7 +49,6 @@ export const getDbStatus = () => ({
   connected: mongoose.connection.readyState === 1,
   readyState: mongoose.connection.readyState,
   hasUri: !!process.env.MONGODB_URI,
-  uriPrefix: process.env.MONGODB_URI ? process.env.MONGODB_URI.slice(0, 16) + '...' : 'none',
   lastError: lastError,
   host: mongoose.connection.readyState === 1 ? mongoose.connection.host : 'Memory Store (Built-in 50 Items)'
 });

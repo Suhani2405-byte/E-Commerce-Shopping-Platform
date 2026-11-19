@@ -11,7 +11,7 @@ import { api } from '../services/api';
 export const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cart, subtotal, shipping, tax, discountAmount, total, coupon, clearCart } = useCart();
-  const { trackPurchase } = useAIBehavior();
+  const { trackPurchase, sessionId } = useAIBehavior();
 
   const [addressData, setAddressData] = useState({
     fullName: '',
@@ -51,8 +51,20 @@ export const CheckoutPage = () => {
 
   const handlePlaceOrder = async () => {
     // Basic validation
-    if (!addressData.fullName || !addressData.email || !addressData.address || !addressData.city) {
-      alert('Please fill in your shipping details or click "Auto-Fill Demo Address"!');
+    const requiredFields = {
+      fullName: 'Full Name',
+      email: 'Email',
+      phone: 'Phone',
+      address: 'Address',
+      city: 'City',
+      state: 'State',
+      zipCode: 'ZIP Code'
+    };
+    const missing = Object.entries(requiredFields)
+      .filter(([key]) => !String(addressData[key] || '').trim())
+      .map(([, label]) => label);
+    if (missing.length) {
+      alert(`Please fill in: ${missing.join(', ')}\n(or click "Auto-Fill Demo Address")`);
       return;
     }
 
@@ -65,6 +77,7 @@ export const CheckoutPage = () => {
     setIsSubmitting(true);
 
     const orderPayload = {
+      sessionId,
       items: cart.map(item => ({
         productId: item.id,
         name: item.name,
@@ -96,7 +109,12 @@ export const CheckoutPage = () => {
       clearCart();
     } catch (err) {
       console.error('Order creation error', err);
-      // Fallback local order
+      if (err.status) {
+        // Server rejected or could not save the order - keep the cart so the user can retry
+        alert(`Order could not be placed: ${err.message}`);
+        return;
+      }
+      // Backend unreachable - offline demo fallback
       const localFallback = {
         orderId: `ORD-${Math.floor(100000 + Math.random() * 900000)}`,
         ...orderPayload,

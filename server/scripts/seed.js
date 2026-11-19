@@ -24,7 +24,8 @@ const seedDatabase = async () => {
     await Product.deleteMany({});
 
     console.log(`🌱 Seeding ${products.length} comprehensive products...`);
-    await Product.insertMany(products);
+    // Mongoose reserves `isNew`, so it is stored as `isNewProduct`
+    await Product.insertMany(products.map(({ isNew, ...p }) => ({ ...p, isNewProduct: !!isNew })));
 
     console.log(`\n🎉 Success! Successfully seeded ${products.length} products into your MongoDB database!`);
     console.log('Categories seeded: Electronics, Fashion, Home & Living, Beauty, Sports & Fitness, Books\n');

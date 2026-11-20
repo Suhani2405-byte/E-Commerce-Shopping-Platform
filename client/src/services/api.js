@@ -158,10 +158,18 @@ export const api = {
     return body;
   },
 
-  async getOrders(sessionId) {
-    if (!sessionId) return [];
-    const res = await fetchSafe(`/orders?sessionId=${encodeURIComponent(sessionId)}`, {}, []);
+  async getOrders(sessionId, options = {}) {
+    const params = new URLSearchParams();
+    if (sessionId) params.append('sessionId', sessionId);
+    if (options.filter) params.append('filter', options.filter);
+    const qs = params.toString();
+    const res = await fetchSafe(`/orders${qs ? `?${qs}` : ''}`, {}, []);
     return res || [];
+  },
+
+  async getOrderById(orderId) {
+    if (!orderId) return null;
+    return await fetchSafe(`/orders/${encodeURIComponent(orderId)}`, {}, null);
   },
 
   // AI Behavior Tracking & Insights

@@ -97,41 +97,58 @@ const priceOrder = async (items, couponCode, connected) => {
 
 const generateOrderId = () => `ORD-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 
-// GET /api/orders?sessionId=... - Order history for this browser session only
+// GET /api/orders - Get order history (returns all orders, with optional session filter)
 router.get('/', async (req, res) => {
-  const { sessionId } = req.query;
-  if (!sessionId) return res.json([]);
+  const { sessionId, filter } = req.query;
 
   try {
     await connectDB();
     const { connected } = getDbStatus();
+
     if (connected) {
-      const orders = await Order.find({ sessionId }).sort({ createdAt: -1 }).lean();
+      let orders = [];
+      // Only strictly isolate if explicit filter=session is requested
+      if (sessionId && filter === 'session') {
+        orders = await Order.find({ sessionId }).sort({ createdAt: -1 }).lean();
+      }
+      // If no session-specific orders found or no strict filter, return all store orders
+      if (!orders.length) {
+        orders = await Order.find().sort({ createdAt: -1 }).limit(100).lean();
+      }
       return res.json(orders);
     }
-    res.json(memoryOrders.filter(o => o.sessionId === sessionId));
+
+    // In-memory fallback
+    if (sessionId && filter === 'session') {
+      const filtered = memoryOrders.filter(o => o.sessionId === sessionId);
+      if (filtered.length) return res.json(filtered);
+    }
+    res.json(memoryOrders);
   } catch (err) {
     console.error('Error fetching orders:', err);
     res.status(500).json({ error: 'Could not load orders' });
   }
 });
 
-// GET /api/orders/:id?sessionId=... - Single order (must belong to the session)
+// GET /api/orders/:id - Single order lookup by orderId or _id
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { sessionId } = req.query;
-    if (!sessionId) return res.status(404).json({ error: 'Order not found' });
 
     await connectDB();
     const { connected } = getDbStatus();
 
     if (connected) {
-      const order = await Order.findOne({ orderId: id, sessionId }).lean();
+      const order = await Order.findOne({
+        $or: [
+          { orderId: id },
+          { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }
+        ]
+      }).lean();
       if (order) return res.json(order);
     }
 
-    const memoryOrder = memoryOrders.find(o => o.orderId === id && o.sessionId === sessionId);
+    const memoryOrder = memoryOrders.find(o => o.orderId === id || o._id === id);
     if (!memoryOrder) {
       return res.status(404).json({ error: 'Order not found' });
     }
